@@ -186,7 +186,7 @@ pub const NamespaceContext = struct {
     ///
     /// Only valid if there is a current scope.
     pub fn endScope(self: *NamespaceContext, allocator: Allocator) void {
-        var bindings = self.scopes.pop();
+        var bindings = self.scopes.pop().?;
         var iter = bindings.iterator();
         while (iter.next()) |entry| {
             allocator.free(entry.key_ptr.*);
@@ -482,7 +482,7 @@ pub fn Reader(comptime ReaderType: type, comptime options: ReaderOptions) type {
                         const name = try self.allocator.dupe(u8, self.token_reader.token_data.element_start.name);
                         errdefer self.allocator.free(name);
                         try self.element_names.append(self.allocator, name);
-                        errdefer _ = self.element_names.pop();
+                        errdefer _ = self.element_names;
                         try self.namespace_context.startScope(self.allocator);
                         self.pending_event = .{ .element_start = .{ .name = name } };
                     },
@@ -500,7 +500,7 @@ pub fn Reader(comptime ReaderType: type, comptime options: ReaderOptions) type {
                             self.pending_token = .element_end;
                             return event;
                         }
-                        const expected_name = self.element_names.pop();
+                        const expected_name = self.element_names.pop().?;
                         defer self.allocator.free(expected_name);
                         if (!mem.eql(u8, expected_name, self.token_reader.token_data.element_end.name)) {
                             return error.MismatchedEndTag;
@@ -515,7 +515,7 @@ pub fn Reader(comptime ReaderType: type, comptime options: ReaderOptions) type {
                             self.pending_token = .element_end_empty;
                             return event;
                         }
-                        const name = self.element_names.pop();
+                        const name = self.element_names.pop().?;
                         defer self.allocator.free(name);
                         const dup_name = try event_allocator.dupe(u8, name);
                         var qname = try self.namespace_context.parseName(dup_name, true);
