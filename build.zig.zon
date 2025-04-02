@@ -1,6 +1,7 @@
 .{
-    .name = "zig-xml",
+    .name = .zig_xml,
     .version = "0.1.0",
+    .fingerprint = 0x8c46bb511630dd0f,
     .paths = .{
         "src",
         "LICENSE",
